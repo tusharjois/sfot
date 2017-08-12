@@ -124,7 +124,11 @@ func NewTokenizer(input *string) (*Tokenizer, error) {
 				msg := fmt.Sprintf("Number at (%v, %v) is not uint16", start, end)
 				return nil, errors.New(msg)
 			}
-			t := newToken("Number", uint16(number), "", start, end)
+			var extra string
+			if len(integer) == 2 {
+				extra = "uint8:"
+			}
+			t := newToken("Number", uint16(number), extra, start, end)
 			tz.add(t)
 		} else if unicode.IsDigit(rune((*c)[0])) {
 			start = index
