@@ -17,9 +17,11 @@ func (t *Token) String() string {
 		return fmt.Sprintf("label<%v>@(%v,%v)", t.Label, t.StartPos, t.EndPos)
 	} else if t.Kind == "Number" {
 		return fmt.Sprintf("number<%v%#x>@(%v,%v)", t.Label, t.Number, t.StartPos, t.EndPos)
-	} else {
-		return fmt.Sprintf("%v@(%v,%v)", t.Kind, t.StartPos, t.EndPos)
+	} else if t.Kind == "Instruction" {
+		return fmt.Sprintf("%v@(%v,%v)", t.Label, t.StartPos, t.EndPos)
 	}
+
+	return fmt.Sprintf("%v@(%v,%v)", t.Kind, t.StartPos, t.EndPos)
 }
 
 func newToken(kind string, number uint16, label string, start int, end int) *Token {
