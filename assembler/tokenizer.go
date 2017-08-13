@@ -98,7 +98,7 @@ func NewTokenizer(input *string) (*Tokenizer, error) {
 				read(input, c, index)
 			}
 		} else if isCharacter(c) {
-			t := newToken("Char", 0x0, *c, index, index)
+			t := newToken(*c, 0x0, "", index, index)
 			tz.add(t)
 			index++
 		} else if *c == "$" {
@@ -165,7 +165,11 @@ func NewTokenizer(input *string) (*Tokenizer, error) {
 			}
 			strRepr := string(identifier)
 			if isKeyword(&strRepr) {
-				t := newToken("Instruction", 0, strings.ToUpper(strRepr), start, end)
+				title := "Instruction"
+				if strRepr == "X" || strRepr == "A" || strRepr == "Y" {
+					title = strRepr
+				}
+				t := newToken(title, 0, strings.ToUpper(strRepr), start, end)
 				tz.add(t)
 			} else {
 				t := newToken("Label", 0, strRepr, start, end)

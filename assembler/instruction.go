@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-type node interface {
+type Node interface {
 	offset(uint16) uint8
 }
 
@@ -34,10 +34,10 @@ func (i instrNode) offset(dest uint16) uint8 {
 }
 
 func (i *instrNode) String() string {
-	if location == nil {
-		return fmt.Sprintf("%v[$%x]@%v<%v>", kind, opcode, address, mode)
+	if i.location == nil {
+		return fmt.Sprintf("%v[$%x]@%v<%v>", i.kind, i.opcode, i.address, i.mode)
 	}
-	return fmt.Sprintf("%v[$%x]@%v", kind, opcode, label)
+	return fmt.Sprintf("%v[$%x]@%v", i.kind, i.opcode, i.location)
 }
 
 const table = `,imm,acc,zp0,zpx,zpy,abs,abx,aby,ind,inx,iny,rel,imp
@@ -111,7 +111,6 @@ func lookupTable(kind, mode string) (bool, uint8) {
 	kind_index := -1
 
 	for index, elem := range lookup {
-		fmt.Println(elem) // TODO
 		if elem[0] == kind {
 			kind_index = index
 			break
@@ -136,6 +135,7 @@ func lookupTable(kind, mode string) (bool, uint8) {
 	}
 
 	if output, err := strconv.ParseUint(lookup[kind_index][mode_index], 16, 8); err == nil {
+		fmt.Printf("$%x\n", output) // TODO
 		return true, uint8(output)
 	} else {
 		return false, 0

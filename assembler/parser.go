@@ -52,8 +52,11 @@ func (ctx *context) handleLabel() (*labelNode, error) {
 
 func (ctx *context) handleInstruction() (*instrNode, error) {
 	instrName := ctx.last.Label
-
 	switch ctx.current.Kind {
+	case "A":
+		ctx.match("A")
+		// Accumulator addressing
+		return NewInstrNodeFromAddr(instrName, 0x0, "acc")
 	case "#":
 		if _, err := ctx.match("#"); err != nil {
 			return nil, err
@@ -70,21 +73,58 @@ func (ctx *context) handleInstruction() (*instrNode, error) {
 			return nil, err
 		}
 
+		// TODO: relative branching
 		if lbl, prs := ctx.labels[lbl.Label]; prs {
 			// Absolute addressing
 			return NewInstrNodeFromLabel(instrName, lbl, "abs")
 		}
 
-		ln = new(labelNode)
-		ln.content = labelName
+		ln := new(labelNode)
+		ln.content = lbl.Label
+		ctx.labels[lbl.Label] = ln
 
 		// Absolute addressing
 		return NewInstrNodeFromLabel(instrName, ln, "abs")
+	case "Number":
+		num, err := ctx.match("Number")
+		if err != nil {
+			return nil, err
+		}
 
-	case "Instruction":
-		// Implicit addressing
-		return NewInstrNodeFromAddr(instrName, 0x0, "imp")
+		if ctx.current.Kind == "," {
+			_, err := ctx.match(",")
+			if err != nil {
+				return nil, err
+			}
+			reg, err := ctx.match("X", "Y")
+			if err != nil {
+				return nil, err
+			}
+
+			if num.Label == "uint8" {
+				num.Label = "zp"
+			} else {
+				num.Label = "ab"
+			}
+
+			// Absolute,R OR Zero Page,R addressing
+			if reg.Kind == "X" {
+				return NewInstrNodeFromAddr(instrName, num.Number, num.Label+"x")
+			}
+			return NewInstrNodeFromAddr(instrName, num.Number, num.Label+"y")
+		}
+
+		if num.Label == "uint8" {
+			// Zero Page addressing
+			return NewInstrNodeFromAddr(instrName, num.Number, "zp0")
+		}
+		// Absolute addressing
+		return NewInstrNodeFromAddr(instrName, num.Number, "abs")
+		// TODO: indirect addressing
+
 	}
+	// Implicit addressing
+	return NewInstrNodeFromAddr(instrName, 0x0, "imp")
 
 }
 
@@ -92,8 +132,8 @@ func NewContext(tz *Tokenizer) *context {
 	return &context{tz: tz, current: tz.Next(), last: nil, labels: make(map[string]*labelNode)}
 }
 
-func Parse(tz *Tokenizer) ([]node, error) {
-	var nodeList []node
+func Parse(tz *Tokenizer) ([]Node, error) {
+	var nodeList []Node
 
 	ctx := NewContext(tz)
 	for ctx.current != nil {
@@ -105,13 +145,15 @@ func Parse(tz *Tokenizer) ([]node, error) {
 			if l, err := ctx.handleLabel(); err == nil {
 				nodeList = append(nodeList, l)
 			} else {
-				return nodeList, err
+				return nodeList,
+					errors.New(fmt.Sprintf("%v: ", t) + err.Error())
 			}
 		} else {
 			if i, err := ctx.handleInstruction(); err == nil {
 				nodeList = append(nodeList, i)
 			} else {
-				return nodeList, err
+				return nodeList,
+					errors.New(fmt.Sprintf("%v: ", t) + err.Error())
 			}
 		}
 	}
