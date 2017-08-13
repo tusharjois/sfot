@@ -50,7 +50,7 @@ func (i *instrNode) String() string {
 }
 
 func (i *instrNode) size() uint {
-	if i.mode == "imp" {
+	if i.mode == "imp" || i.mode == "acc" {
 		return 1
 	} else if i.mode == "ind" || strings.Contains(i.mode, "ab") {
 		return 3

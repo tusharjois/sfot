@@ -17,8 +17,6 @@ func Assemble(nodeList []Node) []uint8 {
 		}
 	}
 
-	fmt.Println(nodeList)
-
 	for _, n := range nodeList {
 		if i, ok := n.(*instrNode); ok {
 			switch i.size() {

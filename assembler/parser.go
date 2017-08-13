@@ -45,6 +45,7 @@ func (ctx *context) handleLabel() (*labelNode, error) {
 	} else {
 		ln = new(labelNode)
 		ln.content = labelName
+		ctx.labels[labelName] = ln
 	}
 
 	return ln, nil
