@@ -19,6 +19,10 @@ func Assemble(nodeList []Node) []uint8 {
 
 	for _, n := range nodeList {
 		if i, ok := n.(*instrNode); ok {
+			if i.location != nil {
+				i.address = i.location.address
+			}
+
 			switch i.size() {
 			case 1:
 				assembled = append(assembled, i.opcode)
