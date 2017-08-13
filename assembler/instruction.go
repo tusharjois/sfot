@@ -10,6 +10,7 @@ import (
 
 type Node interface {
 	offset(uint16) uint8
+	size() uint
 }
 
 type labelNode struct {
@@ -19,6 +20,14 @@ type labelNode struct {
 
 func (l labelNode) offset(dest uint16) uint8 {
 	return uint8(dest - l.address)
+}
+
+func (l *labelNode) String() string {
+	return fmt.Sprintf("<%v %#x>", l.content, l.address)
+}
+
+func (l *labelNode) size() uint {
+	return 0
 }
 
 type instrNode struct {
@@ -35,9 +44,19 @@ func (i instrNode) offset(dest uint16) uint8 {
 
 func (i *instrNode) String() string {
 	if i.location == nil {
-		return fmt.Sprintf("%v[$%x]@%v<%v>", i.kind, i.opcode, i.address, i.mode)
+		return fmt.Sprintf("[$%02x]%v@<%v $%02x>", i.opcode, i.kind, i.mode, i.address)
 	}
-	return fmt.Sprintf("%v[$%x]@%v", i.kind, i.opcode, i.location)
+	return fmt.Sprintf("[$%02x]%v@%v", i.opcode, i.kind, i.location)
+}
+
+func (i *instrNode) size() uint {
+	if i.mode == "imp" {
+		return 1
+	} else if i.mode == "ind" || strings.Contains(i.mode, "ab") {
+		return 3
+	} else {
+		return 2
+	}
 }
 
 const table = `,imm,acc,zp0,zpx,zpy,abs,abx,aby,ind,inx,iny,rel,imp
@@ -135,76 +154,11 @@ func lookupTable(kind, mode string) (bool, uint8) {
 	}
 
 	if output, err := strconv.ParseUint(lookup[kind_index][mode_index], 16, 8); err == nil {
-		fmt.Printf("$%x\n", output) // TODO
 		return true, uint8(output)
 	} else {
 		return false, 0
 	}
 
-	/*imm := []string{"ADC", "AND", "CMP", "CPX", "CPY", "EOR", "LDA", "LDX",
-		"LDY", "ORA", "SBC"}
-	acc := []string{"ASL", "LSR", "ROL", "ROR"}
-	zp0 := []string{"ADC", "AND", "ASL", "BIT", "CMP", "CPX", "CPY", "DEC",
-		"EOR", "INC", "LDA", "LDX", "LDY", "LSR", "ORA", "ROL", "ROR", "SBC",
-		"STA", "STX", "STY"}
-	zpx := []string{"ADC", "AND", "ASL", "CMP", "DEC", "EOR", "INC", "LDA",
-		"LDY", "LSR", "ORA", "ROL", "ROR", "SBC", "STA", "STY"}
-	zpy := []string{"LDX", "STX"}
-	abs := []string{"ADC", "AND", "ASL", "BIT", "CMP", "CPX", "CPY", "DEC",
-		"EOR", "INC", "JMP", "JSR", "LDA", "LDX", "LDY", "LSR", "ORA", "ROL",
-		"ROR", "SBC", "STA", "STX", "STY"}
-	abx := []string{"ADC", "AND", "ASL", "CMP", "DEC", "EOR", "INC", "LDA",
-		"LDY", "LSR", "ORA", "ROL", "ROR", "SBC", "STA"}
-	aby := []string{"ADC", "AND", "CMP", "EOR", "LDA", "LDX", "ORA", "SBC",
-		"STA"}
-	ind := []string{"JMP"}
-	inx := []string{"ADC", "AND", "CMP", "EOR", "LDA", "ORA", "SBC", "STA"}
-	iny := []string{"ADC", "AND", "CMP", "EOR", "LDA", "ORA", "SBC", "STA"}
-	rel := []string{"BPL", "BMI", "BVC", "BCC", "BCS", "BNE", "BEQ"}
-	imp := []string{"BRK", "CLC", "SEC", "CLI", "SEI", "CLV", "CLD", "SED",
-		"NOP", "TAX", "TXA", "DEX", "INX", "TAY", "TYA", "DEY", "INX", "RTI",
-		"RTS", "TXS", "TSX", "PHA", "PLA", "PHP", "PLP"}
-
-	var valid []string
-
-	switch mode {
-	case "imm":
-		valid = imm
-	case "acc":
-		valid = acc
-	case "zp0":
-		valid = zp0
-	case "zpx":
-		valid = zpx
-	case "zpy":
-		valid = zpy
-	case "abs":
-		valid = abs
-	case "abx":
-		valid = abx
-	case "aby":
-		valid = aby
-	case "ind":
-		valid = ind
-	case "inx":
-		valid = inx
-	case "iny":
-		valid = iny
-	case "rel":
-		valid = rel
-	case "imp":
-		valid = imp
-	default:
-		return false
-	}
-
-	for _, elem := range valid {
-		if elem == mode {
-			return true
-		}
-	}
-
-	return false*/
 }
 
 func NewInstrNodeFromAddr(kind string, addr uint16, mode string) (*instrNode, error) {

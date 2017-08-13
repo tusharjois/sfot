@@ -121,7 +121,7 @@ func NewTokenizer(input *string) (*Tokenizer, error) {
 			}
 			number, err := strconv.ParseUint(string(integer), 16, 16)
 			if err != nil {
-				msg := fmt.Sprintf("Number at (%v, %v) is not uint16", start, end)
+				msg := fmt.Sprintf("number at (%v, %v) is not uint16", start, end)
 				return nil, errors.New(msg)
 			}
 			var extra string
@@ -145,7 +145,7 @@ func NewTokenizer(input *string) (*Tokenizer, error) {
 			}
 			number, err := strconv.ParseUint(string(integer), 10, 16)
 			if err != nil {
-				msg := fmt.Sprintf("Number at (%v, %v) is not uint16", start, end)
+				msg := fmt.Sprintf("number at (%v, %v) is not uint16", start, end)
 				return nil, errors.New(msg)
 			}
 			t := newToken("Number", uint16(number), "", start, end)

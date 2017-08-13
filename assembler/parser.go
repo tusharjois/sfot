@@ -52,6 +52,10 @@ func (ctx *context) handleLabel() (*labelNode, error) {
 
 func (ctx *context) handleInstruction() (*instrNode, error) {
 	instrName := ctx.last.Label
+	if result, _ := lookupTable(instrName, "imp"); result {
+		return NewInstrNodeFromAddr(instrName, 0x0, "imp")
+	}
+
 	switch ctx.current.Kind {
 	case "A":
 		ctx.match("A")
@@ -73,18 +77,64 @@ func (ctx *context) handleInstruction() (*instrNode, error) {
 			return nil, err
 		}
 
-		// TODO: relative branching
+		mode := "abs"
+
+		if result, _ := lookupTable(instrName, "rel"); result {
+			// Relative branching
+			mode = "rel"
+		}
+
 		if lbl, prs := ctx.labels[lbl.Label]; prs {
 			// Absolute addressing
-			return NewInstrNodeFromLabel(instrName, lbl, "abs")
+			return NewInstrNodeFromLabel(instrName, lbl, mode)
 		}
 
 		ln := new(labelNode)
 		ln.content = lbl.Label
 		ctx.labels[lbl.Label] = ln
 
-		// Absolute addressing
-		return NewInstrNodeFromLabel(instrName, ln, "abs")
+		return NewInstrNodeFromLabel(instrName, ln, mode)
+	case "(":
+		ctx.match("(")
+		num, err := ctx.match("Number")
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := ctx.match(",", ")")
+		if err != nil {
+			return nil, err
+		}
+
+		if result.Kind == "," {
+			_, err := ctx.match("X")
+			if err != nil {
+				return nil, err
+			}
+			_, err = ctx.match(")")
+			if err != nil {
+				return nil, err
+			}
+
+			// Indirect,X addressing
+			return NewInstrNodeFromAddr(instrName, num.Number, "inx")
+		} else {
+			ctx.match(")")
+			if ctx.current.Kind == "," {
+				ctx.match(",")
+				_, err := ctx.match("Y")
+				if err != nil {
+					return nil, err
+				}
+
+				// Indirect,Y addressing
+				return NewInstrNodeFromAddr(instrName, num.Number, "iny")
+			}
+
+			// Indirect addressing
+			return NewInstrNodeFromAddr(instrName, num.Number, "ind")
+		}
+
 	case "Number":
 		num, err := ctx.match("Number")
 		if err != nil {
@@ -101,7 +151,7 @@ func (ctx *context) handleInstruction() (*instrNode, error) {
 				return nil, err
 			}
 
-			if num.Label == "uint8" {
+			if num.Label == "uint8:" {
 				num.Label = "zp"
 			} else {
 				num.Label = "ab"
@@ -114,17 +164,16 @@ func (ctx *context) handleInstruction() (*instrNode, error) {
 			return NewInstrNodeFromAddr(instrName, num.Number, num.Label+"y")
 		}
 
-		if num.Label == "uint8" {
+		if num.Label == "uint8:" {
 			// Zero Page addressing
 			return NewInstrNodeFromAddr(instrName, num.Number, "zp0")
 		}
 		// Absolute addressing
 		return NewInstrNodeFromAddr(instrName, num.Number, "abs")
-		// TODO: indirect addressing
 
 	}
 	// Implicit addressing
-	return NewInstrNodeFromAddr(instrName, 0x0, "imp")
+	return NewInstrNodeFromAddr(instrName, 0x0, "unk")
 
 }
 
@@ -136,7 +185,7 @@ func Parse(tz *Tokenizer) ([]Node, error) {
 	var nodeList []Node
 
 	ctx := NewContext(tz)
-	for ctx.current != nil {
+	for ctx.current.Kind != "eof" {
 		t, err := ctx.match("Instruction", "Label")
 		if err != nil {
 			return nodeList, err
