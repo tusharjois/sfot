@@ -1,26 +1,43 @@
 package assembler
 
 import (
+	"errors"
 	"fmt"
 )
 
-func Assemble(nodeList []Node) []uint8 {
+func Assemble(nodeList []Node) ([]uint8, error) {
 	var pc uint16 = 0x0600
 
 	var assembled []uint8
+	labelIndex := make(map[string]bool)
 
 	for _, n := range nodeList {
 		pc += uint16(n.size())
 		if l, ok := n.(*labelNode); ok {
 			(*l).address = pc
-			// TODO: Index Labels
+			labelIndex[l.content] = true
 		}
 	}
 
+	pc = 0x0600
+
 	for _, n := range nodeList {
 		if i, ok := n.(*instrNode); ok {
+			pc += uint16(i.size()) // Increment PC
+
 			if i.location != nil {
-				i.address = i.location.address
+				if _, prs := labelIndex[i.location.content]; !prs {
+					return assembled,
+						errors.New(fmt.Sprintf("could not find label %v",
+							i.location.content))
+				}
+
+				if i.mode == "rel" {
+					fmt.Printf("$%04x\n", uint8(i.location.address-pc))
+					i.address = uint16(i.location.offset(pc))
+				} else {
+					i.address = i.location.address
+				}
 			}
 
 			switch i.size() {
@@ -34,12 +51,11 @@ func Assemble(nodeList []Node) []uint8 {
 				assembled = append(assembled, uint8(i.address&0xff))      // little-end
 				assembled = append(assembled, uint8((i.address>>8)&0xff)) // big-end
 			}
+
 		}
 	}
 
-	fmt.Println(Hexdump(assembled, 0, len(assembled)))
-
-	return assembled
+	return assembled, nil
 }
 
 func Hexdump(byteArray []uint8, startPoint uint16, length int) string {

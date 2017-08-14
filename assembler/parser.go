@@ -173,8 +173,8 @@ func (ctx *context) handleInstruction() (*instrNode, error) {
 		return NewInstrNodeFromAddr(instrName, num.Number, "abs")
 
 	}
-	// Implicit addressing
-	return NewInstrNodeFromAddr(instrName, 0x0, "unk")
+	// Implicit addressing for Rotate and Shift Instructions
+	return NewInstrNodeFromAddr(instrName, 0x0, "acc")
 
 }
 

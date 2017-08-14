@@ -19,7 +19,7 @@ type labelNode struct {
 }
 
 func (l labelNode) offset(dest uint16) uint8 {
-	return uint8(dest - l.address)
+	return uint8(l.address - dest)
 }
 
 func (l *labelNode) String() string {
@@ -39,7 +39,7 @@ type instrNode struct {
 }
 
 func (i instrNode) offset(dest uint16) uint8 {
-	return uint8(dest - i.address)
+	return uint8(i.address - dest)
 }
 
 func (i *instrNode) String() string {

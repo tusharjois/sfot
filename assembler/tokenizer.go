@@ -163,13 +163,13 @@ func NewTokenizer(input *string) (*Tokenizer, error) {
 				}
 				read(input, c, index) // advance the automaton
 			}
-			strRepr := string(identifier)
+			strRepr := strings.ToUpper(string(identifier))
 			if isKeyword(&strRepr) {
 				title := "Instruction"
 				if strRepr == "X" || strRepr == "A" || strRepr == "Y" {
 					title = strRepr
 				}
-				t := newToken(title, 0, strings.ToUpper(strRepr), start, end)
+				t := newToken(title, 0, strRepr, start, end)
 				tz.add(t)
 			} else {
 				t := newToken("Label", 0, strRepr, start, end)
