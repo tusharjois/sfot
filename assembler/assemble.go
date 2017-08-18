@@ -6,6 +6,7 @@ import (
 )
 
 func Assemble(nodeList []Node) ([]uint8, error) {
+	// Starts assembly at PC=$0600
 	var pc uint16 = 0x0600
 
 	var assembled []uint8
@@ -33,7 +34,6 @@ func Assemble(nodeList []Node) ([]uint8, error) {
 				}
 
 				if i.mode == "rel" {
-					fmt.Printf("$%04x\n", uint8(i.location.address-pc))
 					i.address = uint16(i.location.offset(pc))
 				} else {
 					i.address = i.location.address
