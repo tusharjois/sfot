@@ -6,10 +6,10 @@ import (
 )
 
 func Assemble(nodeList []Node) ([]uint8, error) {
-	// Starts assembly at PC=$0600
-	var pc uint16 = 0x0600
+	// Starts assembly at PC=$0800
+	var pc uint16 = 0x0800
 
-	var assembled []uint8
+	assembled := []uint8{'s', 'f', 'o', 't'} // Magic number
 	labelIndex := make(map[string]bool)
 
 	for _, n := range nodeList {
@@ -20,7 +20,7 @@ func Assemble(nodeList []Node) ([]uint8, error) {
 		}
 	}
 
-	pc = 0x0600
+	pc = 0x0800
 
 	for _, n := range nodeList {
 		if i, ok := n.(*instrNode); ok {
@@ -58,15 +58,12 @@ func Assemble(nodeList []Node) ([]uint8, error) {
 	return assembled, nil
 }
 
-func Hexdump(byteArray []uint8, startPoint uint16, length int) string {
+func Hexdump(byteArray []uint8) string {
 	var output string
-	if len(byteArray) < int(startPoint)+length {
-		return ""
-	}
 
-	for i := int(startPoint); i < length; i += 16 {
+	for i := 0; i < len(byteArray); i += 16 {
 		output += fmt.Sprintf("%04x: ", i)
-		for j := i; j < length && j-i < 16; j++ {
+		for j := i; j < len(byteArray) && j-i < 16; j++ {
 			output += fmt.Sprintf("%02x ", byteArray[j])
 		}
 		output += "\n"

@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/tusharjois/sfot/assembler"
+	"github.com/tusharjois/sfot/simulator"
+	"os"
 )
 
 func main() {
@@ -11,29 +13,30 @@ func main() {
 	str = `
 ; Change direction: W A S D
 
-define appleL         $00 ; screen location of apple, low byte
-define appleH         $01 ; screen location of apple, high byte
-define snakeHeadL     $10 ; screen location of snake head, low byte
-define snakeHeadH     $11 ; screen location of snake head, high byte
-define snakeBodyStart $12 ; start of snake body byte pairs
-define snakeDirection $02 ; direction (possible values are below)
-define snakeLength    $03 ; snake length, in bytes
+.include "../src/github.com/tusharjois/sfot/example/print.s"
+.define appleL         $00 ; screen location of apple, low byte
+.define appleH         $01 ; screen location of apple, high byte
+.define snakeHeadL     $10 ; screen location of snake head, low byte
+.define snakeHeadH     $11 ; screen location of snake head, high byte
+.define snakeBodyStart $12 ; start of snake body byte pairs
+.define snakeDirection $02 ; direction (possible values are below)
+.define snakeLength    $03 ; snake length, in bytes
 
 ; Directions (each using a separate bit)
-define movingUp      1
-define movingRight   2
-define movingDown    4
-define movingLeft    8
+.define movingUp      1
+.define movingRight   2
+.define movingDown    4
+.define movingLeft    8
 
 ; ASCII values of keys controlling the snake
-define ASCII_w      $77
-define ASCII_a      $61
-define ASCII_s      $73
-define ASCII_d      $64
+.define ASCII_w      $77
+.define ASCII_a      $61
+.define ASCII_s      $73
+.define ASCII_d      $64
 
 ; System variables
-define sysRandom    $fe
-define sysLastKey   $ff
+.define sysRandom    $fe
+.define sysLastKey   $ff
 
 
   jsr init
@@ -279,23 +282,26 @@ spinloop:
 
 gameOver:
 	`
-	str = assembler.Preprocess(str)
+	str, _, err := assembler.Preprocess(str)
+	fmt.Println(str)
+	handleError(err)
+
 	tz, err := assembler.NewTokenizer(&str)
+	handleError(err)
 
+	p, err := assembler.Parse(tz)
+	handleError(err)
+
+	program, err := assembler.Assemble(p)
+	handleError(err)
+
+	fmt.Println(assembler.Hexdump(program))
+	fmt.Println(simulator.Disassemble(program))
+}
+
+func handleError(err error) {
 	if err != nil {
-		fmt.Println(err)
-	} else {
-		p, err := assembler.Parse(tz)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			memory, err := assembler.Assemble(p)
-			if err == nil {
-				fmt.Println(assembler.Hexdump(memory, 0, len(memory)))
-			} else {
-				fmt.Println(err)
-			}
-		}
+		fmt.Fprintf(os.Stderr, "[\x1b[31merror\x1b[0m] %v\n", err)
+		os.Exit(1)
 	}
-
 }
