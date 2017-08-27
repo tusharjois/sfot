@@ -1,5 +1,9 @@
 package simulator
 
+import (
+	"strings"
+)
+
 func (st *State) Run() {
 	isRunning := st.Step()
 
@@ -45,7 +49,7 @@ func (st *State) Step() bool {
 	case "abs":
 		location = uint16(st.memory[st.ProgramCounter])
 		st.ProgramCounter++
-		location += uint32(st.memory[st.ProgramCounter]) << 8
+		location += uint16(uint32(st.memory[st.ProgramCounter]) << 8)
 		st.ProgramCounter++
 	case "abx":
 		location = uint16(st.memory[st.ProgramCounter])
@@ -72,21 +76,30 @@ func (st *State) Step() bool {
 		st.ProgramCounter++
 		location = uint16(st.memory[indirectLoc])
 		indirectLoc++
+		if indirectLoc > 0xff {
+			indirectLoc &= 0xfe
+		}
 		location += uint16(st.memory[indirectLoc]) << 8
 	case "inx":
 		indirectLoc := uint16(st.memory[st.ProgramCounter]) + uint16(st.indexX)
 		st.ProgramCounter++
-		if lookupLoc > 0xff {
-			lookupLoc &= 0xfe
+		if indirectLoc > 0xff {
+			indirectLoc &= 0xfe
 		}
 		location = uint16(st.memory[indirectLoc])
 		indirectLoc++
+		if indirectLoc > 0xff {
+			indirectLoc &= 0xfe
+		}
 		location += uint16(st.memory[indirectLoc]) << 8
 	case "iny":
 		indirectLoc := st.ProgramCounter
 		st.ProgramCounter++
 		location = uint16(st.memory[indirectLoc])
 		indirectLoc++
+		if indirectLoc > 0xff {
+			indirectLoc &= 0xfe
+		}
 		location += uint16(st.memory[indirectLoc]) << 8
 		tempLoc := uint32(st.indexY) + uint32(location)
 		if tempLoc > 0xffff {
@@ -94,127 +107,135 @@ func (st *State) Step() bool {
 		}
 		location = uint16(tempLoc)
 	case "rel":
-		// TODO
+		offset_rel := int32(int8(st.memory[st.ProgramCounter])) + int32(st.ProgramCounter)
+		if offset_rel > 0xffff {
+			offset_rel -= 0xffff
+		} else if offset_rel < 0x0000 {
+			offset_rel += 0xffff
+		}
+		location = uint16(offset_rel)
 	case "imp":
 	}
 
-	st.handleInstruction(info[0], location, immediate, isImm)
+	st.handleInstruction(info[0], location, immediate, immediateFlag)
 }
 
 func (st *State) handleInstruction(instr string, location uint16, immediate byte, flag bool) {
 
 	switch instr {
 	case "ADC":
-		adc(location, immediate, flag)
+		st.adc(location, immediate, flag)
 	case "AND":
-		and(location, immediate, flag)
+		st.and(location, immediate, flag)
 	case "ASL":
-		asl()
+		st.asl()
 	case "BCC":
-		bcc()
+		st.bcc(location)
 	case "BCS":
-		bcs()
+		st.bcs(location)
 	case "BEQ":
-		beq()
+		st.beq(location)
 	case "BIT":
-		bit()
+		st.bit()
 	case "BMI":
-		bmi()
+		st.bmi(location)
 	case "BNE":
-		bne()
+		st.bne(location)
 	case "BPL":
-		bpl()
+		st.bpl(location)
 	case "BRK":
-		brk()
+		st.brk()
 	case "BVC":
-		bvc()
+		st.bvc(location)
 	case "BVS":
-		bvs()
+		st.bvs(location)
 	case "CLC":
-		clc()
+		st.clc()
 	case "CLD":
-		cld()
+		st.cld()
 	case "CLI":
-		cli()
+		st.cli()
 	case "CLV":
-		clv()
+		st.clv()
 	case "CMP":
-		cmp()
+		st.cmp()
 	case "CPX":
-		cpx()
+		st.cpx()
 	case "CPY":
-		cpy()
+		st.cpy()
 	case "DEC":
-		dec()
+		st.dec()
 	case "DEX":
-		dex()
+		st.dex()
 	case "DEY":
-		dey()
+		st.dey()
 	case "EOR":
-		eor()
+		st.eor()
 	case "INC":
-		inc()
+		st.inc()
 	case "INX":
-		inx()
+		st.inx()
 	case "INY":
-		iny()
+		st.iny()
 	case "JMP":
-		jmp()
+		st.jmp()
 	case "JSR":
-		jsr()
+		st.jsr()
 	case "LDA":
-		lda()
+		st.lda()
 	case "LDX":
-		ldx()
+		st.ldx()
 	case "LDY":
-		ldy()
+		st.ldy()
 	case "LSR":
-		lsr()
+		st.lsr()
 	case "NOP":
-		nop()
+		st.nop()
 	case "ORA":
-		ora()
+		st.ora()
 	case "PHA":
-		pha()
+		st.pha()
 	case "PHP":
-		php()
+		st.php()
 	case "PLA":
-		pla()
+		st.pla()
 	case "PLP":
-		plp()
+		st.plp()
 	case "ROL":
-		rol()
+		st.rol()
 	case "ROR":
-		ror()
+		st.ror()
 	case "RTI":
-		rti()
+		st.rti()
 	case "RTS":
-		rts()
+		st.rts()
 	case "SBC":
-		sbc()
+		st.sbc()
 	case "SEC":
-		sec()
+		st.sec()
 	case "SED":
-		sed()
+		st.sed()
 	case "SEI":
-		sei()
+		st.sei()
 	case "STA":
-		sta()
+		st.sta()
 	case "STX":
-		stx()
+		st.stx()
 	case "STY":
-		sty()
+		st.sty()
 	case "TAX":
-		tax()
+		st.tax()
 	case "TAY":
-		tay()
+		st.tay()
 	case "TSX":
-		tsx()
+		st.tsx()
 	case "TXA":
-		txa()
+		st.txa()
 	case "TXS":
-		txs()
+		st.txs()
 	case "TYA":
-		tya()
+		st.tya()
 	}
+
+	return st.breakFlag == 0
 }
