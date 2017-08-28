@@ -67,7 +67,7 @@ func (st *State) HexdumpMemory(startPoint, length uint16) string {
 	}
 
 	for i := startPoint; i < length; i += 16 {
-		output += fmt.Sprintf("%04x: ", i+0x0800)
+		output += fmt.Sprintf("%04x: ", i)
 		for j := i; j < length && j-i < 16; j++ {
 			output += fmt.Sprintf("%02x ", st.memory[j])
 		}
@@ -106,7 +106,29 @@ func (st *State) Reset() {
 	st.zero = 0
 	st.interrupt = 0
 	st.decimal = 0
-	st.breakFlag = 1
+	st.breakFlag = 0
 	st.overflow = 0
 	st.negative = 0
+}
+
+func (st *State) stackPush(value byte) {
+	stackLoc := 0x0100 + uint16(st.stackPointer)
+	st.memory[stackLoc] = value
+	if st.stackPointer == 0x00 {
+		// Stack wrapping
+		st.stackPointer = 0xff
+	} else {
+		st.stackPointer--
+	}
+}
+
+func (st *State) stackPull() byte {
+	if st.stackPointer == 0xff {
+		// Stack wrapping
+		st.stackPointer = 0x00
+	} else {
+		st.stackPointer++
+	}
+	stackLoc := 0x0100 + uint16(st.stackPointer)
+	return st.memory[stackLoc]
 }

@@ -1,6 +1,7 @@
 package simulator
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -15,7 +16,8 @@ func (st *State) Step() bool {
 	var immediate byte
 	var immediateFlag bool = false
 
-	// TODO: Panic Checks
+	// TODO: Check Panic: program counter overflow
+	// TODO: Check Panic: index out of bounds for opcode
 	switch info[1] {
 	case "imm":
 		immediate = st.memory[st.ProgramCounter]
@@ -85,7 +87,7 @@ func (st *State) Step() bool {
 		}
 		location += uint16(st.memory[indirectLoc]) << 8
 	case "iny":
-		indirectLoc := st.ProgramCounter
+		indirectLoc := st.memory[st.ProgramCounter]
 		st.ProgramCounter++
 		location = uint16(st.memory[indirectLoc])
 		indirectLoc++
@@ -100,6 +102,7 @@ func (st *State) Step() bool {
 		location = uint16(tempLoc)
 	case "rel":
 		offset_rel := int32(int8(st.memory[st.ProgramCounter])) + int32(st.ProgramCounter)
+		fmt.Printf("%04x\n", offset_rel)
 		if offset_rel > 0xffff {
 			offset_rel -= 0xffff
 		} else if offset_rel < 0x0000 {
@@ -211,11 +214,11 @@ func (st *State) handleInstruction(instr string, location uint16, immediate byte
 	case "SEI":
 		st.sei()
 	case "STA":
-		st.sta()
+		st.sta(location)
 	case "STX":
-		st.stx()
+		st.stx(location)
 	case "STY":
-		st.sty()
+		st.sty(location)
 	case "TAX":
 		st.tax()
 	case "TAY":

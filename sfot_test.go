@@ -53,11 +53,8 @@ func TestAddressingModes(t *testing.T) {
 	}
 
 	for _, table := range addr_tables {
-		t.Log(table.name)
 		program, err := prepare(table.str)
-		t.Log(simulator.Disassemble(program))
 		st := simulator.NewState(program)
-		t.Log()
 		if err != nil {
 			t.Error(err)
 		}
@@ -68,7 +65,9 @@ func TestAddressingModes(t *testing.T) {
 		acc := st.GetByteRegisters()["A"]
 
 		if acc != value {
-			t.Errorf("Incorrect value in accumulator for %s mode. Want $fa, got $%x", table.name, acc)
+			t.Errorf("Incorrect value in accumulator for %s mode. Want $%02x, got $%02x", table.name, value, acc)
+			t.Log(simulator.Disassemble(program))
+			t.Log(st.HexdumpMemory(0x0, 0xff))
 		}
 	}
 
