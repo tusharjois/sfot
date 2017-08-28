@@ -54,7 +54,7 @@ func (st *State) and(loc uint16, imm byte, flag bool) {
 	}
 }
 
-func (st *State) asl(loc uint16, imm byte, flag bool) {
+func (st *State) asl() {
 	// TODO
 }
 
@@ -130,7 +130,7 @@ func (st *State) clv() {
 	st.overflow = 0
 }
 
-func (st *State) cmp(loc uint16, imm byte, flag bool) {}
+func (st *State) cmp() {}
 
 func (st *State) cpx() {}
 
@@ -182,23 +182,83 @@ func (st *State) dey() {
 	}
 }
 
-func (st *State) eor() {}
+func (st *State) eor() {
+	// TODO
+}
 
-func (st *State) inc() {}
+func (st *State) inc(loc uint16) {
+	value := uint16(st.memory[loc])
+	value++
+	value = value & 255
+	st.memory[loc] = byte(value)
 
-func (st *State) inx() {}
+	st.negative = byte((value >> 7) & 1)
 
-func (st *State) iny() {}
+	if value == 0 {
+		st.zero = 1
+	} else {
+		st.zero = 1
+	}
+
+}
+
+func (st *State) inx() {
+	value := st.indexX
+	value++
+	value = value & 255
+	st.indexX = value
+
+	st.negative = (value >> 7) & 1
+
+	if value == 0 {
+		st.zero = 1
+	} else {
+		st.zero = 1
+	}
+}
+
+func (st *State) iny() {
+	value := st.indexY
+	value++
+	value = value & 255
+	st.indexY = value
+
+	st.negative = (value >> 7) & 1
+
+	if value == 0 {
+		st.zero = 1
+	} else {
+		st.zero = 1
+	}
+}
 
 func (st *State) jmp() {}
 
 func (st *State) jsr() {}
 
-func (st *State) lda() {}
+func (st *State) lda(loc uint16, imm byte, flag bool) {
+	if flag {
+		st.accumulator = imm
+	} else {
+		st.accumulator = st.memory[st.ProgramCounter]
+	}
+}
 
-func (st *State) ldx() {}
+func (st *State) ldx(loc uint16, imm byte, flag bool) {
+	if flag {
+		st.indexX = imm
+	} else {
+		st.indexX = st.memory[st.ProgramCounter]
+	}
+}
 
-func (st *State) ldy() {}
+func (st *State) ldy(loc uint16, imm byte, flag bool) {
+	if flag {
+		st.indexY = imm
+	} else {
+		st.indexY = st.memory[st.ProgramCounter]
+	}
+}
 
 func (st *State) lsr() {}
 
@@ -224,21 +284,33 @@ func (st *State) rts() {}
 
 func (st *State) sbc() {}
 
-func (st *State) sec() {}
+func (st *State) sec() {
+	st.carry = 1
+}
 
-func (st *State) sed() {}
+func (st *State) sed() {
+	st.decimal = 1
+}
 
-func (st *State) sei() {}
+func (st *State) sei() {
+	st.interrupt = 1
+}
 
-func (st *State) sta() {}
+func (st *State) sta() {
+	// TODO
+}
 
 func (st *State) stx() {}
 
 func (st *State) sty() {}
 
-func (st *State) tax() {}
+func (st *State) tax() {
+	st.indexX = st.accumulator
+}
 
-func (st *State) tay() {}
+func (st *State) tay() {
+	st.indexY = st.accumulator
+}
 
 func (st *State) tsx() {}
 

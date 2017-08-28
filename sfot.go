@@ -8,27 +8,55 @@ import (
 	"os"
 )
 
-func main() {
+func runAssembler(str string) ([]byte, error) {
+	var program []byte
 
+	str, _, err := assembler.Preprocess(str)
+	if err != nil {
+		return program, err
+	}
+
+	tz, err := assembler.NewTokenizer(&str)
+	if err != nil {
+		return program, err
+	}
+
+	p, err := assembler.Parse(tz)
+	if err != nil {
+		return program, err
+	}
+
+	program, err = assembler.Assemble(p)
+	if err != nil {
+		return program, err
+	}
+
+	return program, nil
+}
+
+func runSimulator(program []byte, debug bool) {
+	isRunning := true
+	st := simulator.NewState(program)
+
+	for isRunning {
+		isRunning = st.Step()
+		if debug {
+			fmt.Println(st)
+			fmt.Println(st.HexdumpMemory(0, 0xff))
+		}
+	}
+}
+
+func main() {
 	input, err := ioutil.ReadAll(os.Stdin)
+	handleError(err)
 
 	str := string(input)
 
-	str, _, err = assembler.Preprocess(str)
-	fmt.Println(str)
+	program, err := runAssembler(str)
 	handleError(err)
 
-	tz, err := assembler.NewTokenizer(&str)
-	handleError(err)
-
-	p, err := assembler.Parse(tz)
-	handleError(err)
-
-	program, err := assembler.Assemble(p)
-	handleError(err)
-
-	fmt.Println(assembler.Hexdump(program))
-	fmt.Println(simulator.Disassemble(program))
+	runSimulator(program, true) // TODO
 }
 
 func handleError(err error) {

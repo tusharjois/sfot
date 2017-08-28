@@ -4,14 +4,6 @@ import (
 	"strings"
 )
 
-func (st *State) Run() {
-	isRunning := st.Step()
-
-	for isRunning {
-		isRunning = st.Step()
-	}
-}
-
 func (st *State) Step() bool {
 	opcode := st.memory[st.ProgramCounter]
 	st.ProgramCounter++
@@ -118,6 +110,7 @@ func (st *State) Step() bool {
 	}
 
 	st.handleInstruction(info[0], location, immediate, immediateFlag)
+	return st.breakFlag == 0
 }
 
 func (st *State) handleInstruction(instr string, location uint16, immediate byte, flag bool) {
@@ -164,7 +157,7 @@ func (st *State) handleInstruction(instr string, location uint16, immediate byte
 	case "CPY":
 		st.cpy()
 	case "DEC":
-		st.dec()
+		st.dec(location)
 	case "DEX":
 		st.dex()
 	case "DEY":
@@ -172,7 +165,7 @@ func (st *State) handleInstruction(instr string, location uint16, immediate byte
 	case "EOR":
 		st.eor()
 	case "INC":
-		st.inc()
+		st.inc(location)
 	case "INX":
 		st.inx()
 	case "INY":
@@ -182,11 +175,11 @@ func (st *State) handleInstruction(instr string, location uint16, immediate byte
 	case "JSR":
 		st.jsr()
 	case "LDA":
-		st.lda()
+		st.lda(location, immediate, flag)
 	case "LDX":
-		st.ldx()
+		st.ldx(location, immediate, flag)
 	case "LDY":
-		st.ldy()
+		st.ldy(location, immediate, flag)
 	case "LSR":
 		st.lsr()
 	case "NOP":
@@ -237,5 +230,4 @@ func (st *State) handleInstruction(instr string, location uint16, immediate byte
 		st.tya()
 	}
 
-	return st.breakFlag == 0
 }
