@@ -87,7 +87,10 @@ func NewState(program []byte) *State {
 
 	for _, element := range program {
 		st.memory[st.ProgramCounter] = element
+		st.ProgramCounter++
 	}
+
+	st.ProgramCounter = 0x0800
 
 	return st
 }

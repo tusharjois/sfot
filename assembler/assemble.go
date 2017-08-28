@@ -9,7 +9,7 @@ func Assemble(nodeList []Node) ([]uint8, error) {
 	// Starts assembly at PC=$0800
 	var pc uint16 = 0x0800
 
-	assembled := []uint8{'s', 'f', 'o', 't'} // Magic number
+	var assembled []uint8 // Magic number
 	labelIndex := make(map[string]bool)
 
 	for _, n := range nodeList {

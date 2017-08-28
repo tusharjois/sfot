@@ -6,16 +6,12 @@ import (
 )
 
 func Disassemble(assembled []byte) string {
-	if len(assembled) < 4 || (assembled[0] != 's' && assembled[1] != 'f' && assembled[2] != 'o' && assembled[3] != 't') {
-		return "Invalid sfot binary (incorrect magic number)\n"
-	}
-
 	output := "Address    Hexdump    Disassembled\n"
 	output += "========   ========   =============\n"
 
 	address := 0x800 // Start of program counter
 
-	index := 4
+	index := 0
 	for index < len(assembled) {
 		opcode := assembled[index]
 		info := strings.Split(opcodeMatrix[opcode], "-")
@@ -28,7 +24,7 @@ func Disassemble(assembled []byte) string {
 
 		switch info[1] {
 		case "imm":
-			loc_part = fmt.Sprintf("$#%02x", assembled[index+1])
+			loc_part = fmt.Sprintf("#$%02x", assembled[index+1])
 			hexdump = fmt.Sprintf("%02x %02x", assembled[index], assembled[index+1])
 			jump_amt += 2
 		case "acc":
