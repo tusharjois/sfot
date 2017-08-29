@@ -1,7 +1,6 @@
 package simulator
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -101,8 +100,8 @@ func (st *State) Step() bool {
 		}
 		location = uint16(tempLoc)
 	case "rel":
+		st.ProgramCounter++ // TODO: example.s
 		offset_rel := int32(int8(st.memory[st.ProgramCounter])) + int32(st.ProgramCounter)
-		fmt.Printf("%04x\n", offset_rel)
 		if offset_rel > 0xffff {
 			offset_rel -= 0xffff
 		} else if offset_rel < 0x0000 {

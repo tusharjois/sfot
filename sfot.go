@@ -15,27 +15,27 @@ func assemble(str string) ([]byte, error) {
 	var program []byte
 
 	if str == "" {
-		return program, errors.New("program is empty")
+		return program, errors.New("preprocessor: program is empty")
 	}
 
 	str, _, err := assembler.Preprocess(str)
 	if err != nil {
-		return program, err
+		return program, errors.New("preprocessor: " + err.Error())
 	}
 
 	tz, err := assembler.NewTokenizer(&str)
 	if err != nil {
-		return program, err
+		return program, errors.New("tokenizer: " + err.Error())
 	}
 
 	p, err := assembler.Parse(tz)
 	if err != nil {
-		return program, err
+		return program, errors.New("parser: " + err.Error())
 	}
 
 	program, err = assembler.Assemble(p)
 	if err != nil {
-		return program, err
+		return program, errors.New("assembler: " + err.Error())
 	}
 
 	return program, nil
@@ -45,7 +45,7 @@ func run(st *simulator.State) {
 	for st.Step() {
 	}
 
-	fmt.Println("program stopped execution (pc=$%04x)", st.ProgramCounter)
+	fmt.Printf("program stopped execution (pc=$%04x)\n", st.ProgramCounter)
 }
 
 func helpRepl(isDebug bool) {
@@ -84,8 +84,9 @@ func debug(st *simulator.State) {
 			helpRepl(true)
 		case "step":
 			if !st.Step() {
-				fmt.Println("program stopped execution (pc=$%04x)", st.ProgramCounter)
+				fmt.Println("program stopped execution")
 			}
+			fmt.Printf("pc=$%04x\n", st.ProgramCounter)
 		case "print":
 			fmt.Println(st)
 		case "reset":
@@ -107,6 +108,7 @@ func repl(str string) {
 	fmt.Println("type 'help' for a list of commands\n")
 
 	var currentState *simulator.State
+	var assembledProgram []byte
 	var fileData string = str
 
 	for true {
@@ -116,7 +118,8 @@ func repl(str string) {
 		subcommand = strings.ToLower(subcommand)
 		switch command {
 		case "assemble":
-			assembledProgram, err := assemble(fileData)
+			var err error
+			assembledProgram, err = assemble(fileData)
 			handleError(err, true)
 			currentState = simulator.NewState(assembledProgram)
 		case "run":
@@ -138,6 +141,12 @@ func repl(str string) {
 			}
 		case "help":
 			helpRepl(false)
+		case "disassemble":
+			if currentState == nil {
+				fmt.Println("no assembled program found")
+			} else {
+				fmt.Println(simulator.Disassemble(assembledProgram)) // TODO
+			}
 		case "exit":
 			return
 		default:
@@ -160,11 +169,15 @@ func main() {
 
 	var str string
 
+	if len(flag.Args()) == 0 {
+		repl("")
+		return
+	}
+
 	if *infile == "" {
 		input, err := ioutil.ReadAll(os.Stdin)
 		handleError(err, false)
 		str = string(input)
-		// TODO repl placement
 	} else {
 		input, err := ioutil.ReadFile(*infile)
 		handleError(err, false)
@@ -191,7 +204,7 @@ func main() {
 		} else if *debugMode {
 			debug(st)
 		} else if *disassembly {
-			debug(st) // TODO
+			fmt.Println(simulator.Disassemble(program)) // TODO
 		} else if *hexdumpProgram {
 			debug(st) // TODO
 		} else {

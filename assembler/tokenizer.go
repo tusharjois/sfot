@@ -176,7 +176,7 @@ func NewTokenizer(input *string) (*Tokenizer, error) {
 				tz.add(t)
 			}
 		} else {
-			msg := fmt.Sprintf("unrecognized character %v at position %v", *c, index)
+			msg := fmt.Sprintf("unrecognized character %q at position %v", *c, index)
 			return nil, errors.New(msg)
 		}
 

@@ -19,8 +19,12 @@
 
 ; putc Print a char to the current cursor position
 ; [input] $01 the ASCII code of the char to print
-; [zero page use] $01, $02, $03
+; [zero page use] $01, $02, $03 TODO push to stack
 ; TODO outside cursor area
+
+main:
+	brk ; Useful only for subroutines
+
 putc:
 	ldx $01
 	; Load address of cursor position
@@ -36,7 +40,7 @@ putc:
 newline:
 	lda $07fb
 	clc
-	sbc #max_col_num
+	sbc #io_max_col_num
 
 puts:
 
