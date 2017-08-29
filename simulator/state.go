@@ -79,6 +79,8 @@ func (st *State) HexdumpMemory(startPoint, length uint16) string {
 func NewState(program []byte) *State {
 	if len(program)+0x0800 >= 0xffff {
 		return nil
+	} else if len(program) == 0x0 {
+		return nil
 	}
 
 	st := new(State)

@@ -231,6 +231,9 @@ func (st *State) handleInstruction(instr string, location uint16, immediate byte
 		st.txs()
 	case "TYA":
 		st.tya()
+	default:
+		// Illegal instruction
+		st.breakFlag = 1
 	}
 
 }
