@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func runAssembler(str string) ([]byte, error) {
+func assemble(str string) ([]byte, error) {
 	var program []byte
 
 	str, _, err := assembler.Preprocess(str)
@@ -37,9 +37,8 @@ func runAssembler(str string) ([]byte, error) {
 	return program, nil
 }
 
-func runSimulator(program []byte, debug bool) {
+func run(st *simulator.State, debug bool) {
 	isRunning := true
-	st := simulator.NewState(program)
 
 	for isRunning {
 		isRunning = st.Step()
@@ -50,23 +49,77 @@ func runSimulator(program []byte, debug bool) {
 	}
 }
 
+func helpRepl(isDebug bool) {
+	if !isDebug {
+		fmt.Println("load - load a file by name into sfot")
+		fmt.Println("assemble - assemble loaded file")
+		fmt.Println("run - run simulator on assembled program")
+		fmt.Println("hexdump - display hexdump of assembled program")
+		fmt.Println("disassemble - disassembly of assembled program")
+	}
+	fmt.Println("reset - reset program execution to original state")
+	fmt.Println("debug - turn on debug mode")
+	fmt.Println("step - step forward an instruction (debug only)")
+	fmt.Println("jump - jump to program counter (debug only)")
+	fmt.Println("print - print current processor state")
+	fmt.Println("help - show this help message")
+	if !isDebug {
+		fmt.Println("exit - exit sfot")
+	} else {
+		fmt.Println("exit - exit debug mode")
+	}
+}
+
+func debug(st *simulator.State) {
+	fmt.Println("sfot debug mode active")
+	isDebug := true
+
+	var command string
+	var subcommand string
+
+	for isDebug {
+		fmt.Print("sfot debug> ")
+		fmt.Scanf("%s %x\n", &command, &subcommand)
+		command = strings.ToLower(command)
+		subcommand = strings.ToLower(subcommand)
+
+		switch command {
+		case "help":
+			helpRepl(true)
+		case "step":
+			if !st.Step() {
+				st
+			}
+		case "print":
+			fmt.Println(st)
+		case "jump":
+
+		case "exit":
+			return
+		}
+	}
+}
+
 func repl() {
-	// commands := []string{"load", "unload", "assemble", "run", "reset", "hexdump", "disassemble", "debug", "step", "jump", "exit", "help", "print"}
+	// commands := []string{"load", "assemble", "run", "reset", "hexdump", "disassemble", "debug", "step", "jump", "exit", "help", "print"}
 	var command string
 	var subcommand string
 
 	fmt.Println("the sfot 6502 assembler and simulator")
 	fmt.Println("type 'help' for a list of commands")
-	fmt.Print("sfot> ")
-	fmt.Scanf("%s %s\n", &command, &subcommand)
-	command = strings.ToLower(command)
-	subcommand = strings.ToLower(subcommand)
 
 	var isRepl = true
+	var debugFlag = false
 	var currentState *simulator.State
-	var fileName string
 	var fileData string
+	var assembledProgram []byte
 
+	for isRepl {
+		fmt.Print("sfot> ")
+		fmt.Scanf("%s %s\n", &command, &subcommand)
+		command = strings.ToLower(command)
+		subcommand = strings.ToLower(subcommand)
+	}
 }
 
 func main() {
