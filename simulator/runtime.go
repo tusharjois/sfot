@@ -132,7 +132,7 @@ func (st *State) handleInstruction(instr string, location uint16, immediate byte
 	case "BEQ":
 		st.beq(location)
 	case "BIT":
-		st.bit()
+		st.bit(location)
 	case "BMI":
 		st.bmi(location)
 	case "BNE":
@@ -154,11 +154,11 @@ func (st *State) handleInstruction(instr string, location uint16, immediate byte
 	case "CLV":
 		st.clv()
 	case "CMP":
-		st.cmp()
+		st.cmp(location, immediate, flag)
 	case "CPX":
-		st.cpx()
+		st.cpx(location, immediate, flag)
 	case "CPY":
-		st.cpy()
+		st.cpy(location, immediate, flag)
 	case "DEC":
 		st.dec(location)
 	case "DEX":
@@ -174,9 +174,9 @@ func (st *State) handleInstruction(instr string, location uint16, immediate byte
 	case "INY":
 		st.iny()
 	case "JMP":
-		st.jmp()
+		st.jmp(location)
 	case "JSR":
-		st.jsr()
+		st.jsr(location)
 	case "LDA":
 		st.lda(location, immediate, flag)
 	case "LDX":

@@ -76,8 +76,18 @@ func (st *State) beq(loc uint16) {
 	}
 }
 
-func (st *State) bit() {
-	// TODO
+func (st *State) bit(loc uint16) {
+	value := st.memory[loc]
+	anded := st.accumulator & value
+
+	st.negative = byte((anded >> 7) & 1)
+	st.overflow = byte((anded >> 6) & 1)
+
+	if anded == 0 {
+		st.zero = 1
+	} else {
+		st.zero = 0
+	}
 }
 
 func (st *State) bmi(loc uint16) {
@@ -130,16 +140,73 @@ func (st *State) clv() {
 	st.overflow = 0
 }
 
-func (st *State) cmp() {
-	// TODO
+func (st *State) cmp(loc uint16, imm byte, flag bool) {
+	var value byte
+	if flag {
+		value = imm
+	} else {
+		value = st.memory[loc]
+	}
+
+	if st.accumulator >= value {
+		st.carry = 1
+	} else {
+		st.carry = 0
+	}
+
+	if st.accumulator == value {
+		st.zero = 1
+	} else {
+		st.zero = 0
+	}
+
+	st.negative = byte(((st.accumulator - value) >> 7) & 1)
 }
 
-func (st *State) cpx() {
-	// TODO
+func (st *State) cpx(loc uint16, imm byte, flag bool) {
+	var value byte
+	if flag {
+		value = imm
+	} else {
+		value = st.memory[loc]
+	}
+
+	if st.indexX >= value {
+		st.carry = 1
+	} else {
+		st.carry = 0
+	}
+
+	if st.indexX == value {
+		st.zero = 1
+	} else {
+		st.zero = 0
+	}
+
+	st.negative = byte(((st.indexX - value) >> 7) & 1)
 }
 
-func (st *State) cpy() {
-	// TODO
+func (st *State) cpy(loc uint16, imm byte, flag bool) {
+	var value byte
+	if flag {
+		value = imm
+	} else {
+		value = st.memory[loc]
+	}
+
+	if st.indexY >= value {
+		st.carry = 1
+	} else {
+		st.carry = 0
+	}
+
+	if st.indexY == value {
+		st.zero = 1
+	} else {
+		st.zero = 0
+	}
+
+	st.negative = byte(((st.indexY - value) >> 7) & 1)
 }
 
 func (st *State) dec(loc uint16) {
@@ -153,7 +220,7 @@ func (st *State) dec(loc uint16) {
 	if value == 0 {
 		st.zero = 1
 	} else {
-		st.zero = 1
+		st.zero = 0
 	}
 
 }
@@ -169,7 +236,7 @@ func (st *State) dex() {
 	if value == 0 {
 		st.zero = 1
 	} else {
-		st.zero = 1
+		st.zero = 0
 	}
 }
 
@@ -184,7 +251,7 @@ func (st *State) dey() {
 	if value == 0 {
 		st.zero = 1
 	} else {
-		st.zero = 1
+		st.zero = 0
 	}
 }
 
@@ -203,7 +270,7 @@ func (st *State) inc(loc uint16) {
 	if value == 0 {
 		st.zero = 1
 	} else {
-		st.zero = 1
+		st.zero = 0
 	}
 
 }
@@ -214,12 +281,12 @@ func (st *State) inx() {
 	value = value & 255
 	st.indexX = value
 
-	st.negative = (value >> 7) & 1
+	st.negative = byte((value >> 7) & 1)
 
 	if value == 0 {
 		st.zero = 1
 	} else {
-		st.zero = 1
+		st.zero = 0
 	}
 }
 
@@ -229,12 +296,12 @@ func (st *State) iny() {
 	value = value & 255
 	st.indexY = value
 
-	st.negative = (value >> 7) & 1
+	st.negative = byte((value >> 7) & 1)
 
 	if value == 0 {
 		st.zero = 1
 	} else {
-		st.zero = 1
+		st.zero = 0
 	}
 }
 
@@ -254,6 +321,14 @@ func (st *State) lda(loc uint16, imm byte, flag bool) {
 	} else {
 		st.accumulator = st.memory[loc]
 	}
+
+	if st.accumulator == 0 {
+		st.zero = 1
+	} else {
+		st.zero = 0
+	}
+
+	st.negative = byte((st.accumulator >> 7) & 1)
 }
 
 func (st *State) ldx(loc uint16, imm byte, flag bool) {
@@ -262,6 +337,14 @@ func (st *State) ldx(loc uint16, imm byte, flag bool) {
 	} else {
 		st.indexX = st.memory[loc]
 	}
+
+	if st.indexX == 0 {
+		st.zero = 1
+	} else {
+		st.zero = 0
+	}
+
+	st.negative = byte((st.indexX >> 7) & 1)
 }
 
 func (st *State) ldy(loc uint16, imm byte, flag bool) {
@@ -269,6 +352,14 @@ func (st *State) ldy(loc uint16, imm byte, flag bool) {
 		st.indexY = imm
 	} else {
 		st.indexY = st.memory[loc]
+
+		if st.indexY == 0 {
+			st.zero = 1
+		} else {
+			st.zero = 0
+		}
+
+		st.negative = byte((st.indexY >> 7) & 1)
 	}
 }
 
@@ -276,9 +367,7 @@ func (st *State) lsr() {
 	// TODO
 }
 
-func (st *State) nop() {
-	// TODO
-}
+func (st *State) nop() {} // Do nothing
 
 func (st *State) ora() {
 	// TODO
@@ -321,7 +410,8 @@ func (st *State) ror() {
 }
 
 func (st *State) rti() {
-	// TODO
+	st.plp() // Pull processor data
+	st.rts() // Pull program counter data
 }
 
 func (st *State) rts() {
